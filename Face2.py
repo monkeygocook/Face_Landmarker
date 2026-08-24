@@ -115,6 +115,9 @@ elif choice == "1":
         min_tracking_confidence=0.5
     ) as face_mesh:
 
+        #=========================
+        # Main Loop
+        #=========================
         while True:
 
             success, frame = cap.read()
