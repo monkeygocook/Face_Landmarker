@@ -1,7 +1,9 @@
 import cv2
 import mediapipe as mp
 
+# ==========================
 # MediaPipe Setup
+# ==========================
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 
@@ -10,6 +12,26 @@ print("1. Webcam Mode")
 print("2. Image Mode")
 
 choice = input("\nChoose Mode (1/2): ")
+
+# ==========================
+# เลือกจำนวนใบหน้า
+# ==========================
+while True:
+
+    try:
+
+        max_faces = int(
+            input("\nMaximum faces to detect (1-100): ")
+        )
+
+        if 1 <= max_faces <= 100:
+            break
+
+        print("Please enter a number between 1 and 100.")
+
+    except ValueError:
+
+        print("Please enter a valid number.")
 
 # ==========================
 # IMAGE MODE
@@ -30,7 +52,7 @@ if choice == "2":
 
     with mp_face_mesh.FaceMesh(
         static_image_mode=True,
-        max_num_faces=10,
+        max_num_faces=max_faces,
         refine_landmarks=True,
         min_detection_confidence=0.5
     ) as face_mesh:
@@ -63,6 +85,7 @@ if choice == "2":
             )
 
         else:
+
             cv2.putText(
                 image,
                 "No Face Found",
@@ -80,13 +103,13 @@ if choice == "2":
 # ==========================
 # WEBCAM MODE
 # ==========================
-else:
+elif choice == "1":
 
     cap = cv2.VideoCapture(0)
 
     with mp_face_mesh.FaceMesh(
         static_image_mode=False,
-        max_num_faces=4,
+        max_num_faces=max_faces,
         refine_landmarks=True,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5
@@ -130,6 +153,18 @@ else:
                     2
                 )
 
+            else:
+
+                cv2.putText(
+                    frame,
+                    "No Face Found",
+                    (10, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 0, 255),
+                    2
+                )
+
             cv2.imshow("Face Mesh Webcam", frame)
 
             if cv2.waitKey(1) & 0xFF == 27:
@@ -137,3 +172,7 @@ else:
 
     cap.release()
     cv2.destroyAllWindows()
+
+else:
+
+    print("Invalid Mode!")
