@@ -133,7 +133,6 @@
       padding: 20px;
       z-index: 2;
     }
-    /*col
     /* ซ่อน placeholder เมื่อโหลดโมเดลเสร็จ */
     .placeholder.hidden { display: none; }
     .spinner {
@@ -387,7 +386,7 @@
       stopBtn.disabled = true;
       maxFacesInput.disabled = false;
     }
-
+    /* วนลูปประมวลผลกล้อง = cv2.VideoCapture.read() */
     function renderLoop() {
       if (!running) return;
       const now = performance.now();
