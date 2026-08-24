@@ -15,6 +15,9 @@ Project Face Landmarker
 - [ ] อัพโหลดรูปได้
 - [ ] ตั้งค่าจำนวนหน้า
 
+### web
+https://monkeygocook.github.io/Face_Landmarker/index.html
+
 ### จัดทำโดย
 นายสริวิทย์ วิริยะอาทร 6710301021  
 นายพรราเมศวร์ กวีวรรณ 6710301031  
