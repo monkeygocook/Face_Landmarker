@@ -44,6 +44,7 @@
       padding: 5px;
       margin-bottom: 16px;
     }
+    /* ปุ่มเลือกโหมด = cv2.waitKey */
     .tab {
       padding: 9px 22px;
       border-radius: 8px;
@@ -188,7 +189,7 @@
     <h1>Face <span>Landmarker</span></h1>
     <p>ตรวจจับตาข่ายใบหน้าจากกล้องหรือรูปภาพ ในเบราว์เซอร์</p>
   </header>
-  /* แสดงผลลัพธ์ = cv2.imshow */
+  
   <!-- เลือกโหมด = choice 1/2 -->
   <div class="tabs">
     <button class="tab active" id="tabWebcam" data-mode="webcam">กล้อง (Webcam)</button>
@@ -219,7 +220,7 @@
   </div>
 
   <!-- ปุ่มโหมดรูปภาพ -->
-   /* ปุ่มอัปโหลดรูปภาพ = cv2.imread */
+
   <div class="controls hidden-el" id="imageControls">
     <button class="btn primary" id="uploadBtn" disabled>เลือกรูปภาพ</button>
     <input type="file" id="fileInput" accept="image/*" class="hidden-el" />
