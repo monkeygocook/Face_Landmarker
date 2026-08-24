@@ -9,11 +9,14 @@ Project Face Landmarker
 
 ### Global
 
-- [ ] สร้าง index.html
+- [x] สร้าง index.html
 - [x] ทำฟังค์ชั่น Face Landmarker
 - [ ] เรียกใช้ ฟังค์ชั่น Face Landmarker บน index.html
 - [ ] อัพโหลดรูปได้
 - [ ] ตั้งค่าจำนวนหน้า
+
+### web
+https://monkeygocook.github.io/Face_Landmarker/index.html
 
 ### จัดทำโดย
 นายสริวิทย์ วิริยะอาทร 6710301021  

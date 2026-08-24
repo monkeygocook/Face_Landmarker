@@ -1,21 +1,292 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="th">
 <head>
-    <title>AI Image Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Face Landmarker</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --line: #262b36;
+      --text: #e7ebf2;
+      --muted: #8b93a3;
+      --accent: #4de3c1;
+      --danger: #ff6b6b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Sarabun", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+    header { text-align: center; margin-bottom: 20px; max-width: 640px; }
+    h1 { font-size: 1.9rem; letter-spacing: -0.02em; margin-bottom: 6px; }
+    h1 span { color: var(--accent); }
+    header p { color: var(--muted); font-size: 0.95rem; }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      max-width: 720px;
+      aspect-ratio: 4 / 3;
+      background: #000;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    /* mirror ให้เหมือนกระจก = cv2.flip ใน Face1.py */
+    #video, #overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: scaleX(-1);
+    }
+    #video { object-fit: cover; }
+
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 20px;
+    }
+    .placeholder.hidden { display: none; }
+    .spinner {
+      width: 26px; height: 26px;
+      border: 3px solid var(--line);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      font: inherit;
+      font-weight: 600;
+      padding: 11px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    button:hover:not(:disabled) { border-color: var(--accent); }
+    button.primary {
+      background: var(--accent);
+      color: #05201b;
+      border-color: var(--accent);
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .status {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-height: 1.2em;
+      text-align: center;
+    }
+    .status.error { color: var(--danger); }
+
+    .info {
+      margin-top: 22px;
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .info div { text-align: center; }
+    .info .num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .info .lbl { font-size: 0.8rem; color: var(--muted); }
+  </style>
 </head>
 
 <body>
+  <header>
+    <h1>Face <span>Landmarker</span></h1>
+    <p>ตรวจจับตาข่ายใบหน้าแบบเรียลไทม์ ผ่านกล้องในเบราว์เซอร์</p>
+  </header>
 
-    <h1>My First AI Website</h1>
+  <div class="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <div class="placeholder" id="placeholder">
+      <div class="spinner" id="spinner"></div>
+      <span id="placeholderText">กำลังโหลดโมเดล...</span>
+    </div>
+  </div>
 
-    <p>Text to Image</p>
-    <form action="/generate" method="post">
-        <label for="prompt">Prompt</label>
+  <div class="controls">
+    <button class="primary" id="startBtn" disabled>เปิดกล้อง</button>
+    <button id="stopBtn" disabled>ปิดกล้อง</button>
+  </div>
 
-    </form>
-    <p></p>
-    <div>Output</div>
+  <div class="status" id="status"></div>
+
+  <div class="info">
+    <div>
+      <div class="num" id="faceCount">0</div>
+      <div class="lbl">ใบหน้าที่พบ</div>
+    </div>
+    <div>
+      <div class="num" id="fps">0</div>
+      <div class="lbl">FPS</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      FaceLandmarker,
+      FilesetResolver,
+      DrawingUtils
+    } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const statusEl = document.getElementById("status");
+    const placeholder = document.getElementById("placeholder");
+    const placeholderText = document.getElementById("placeholderText");
+    const spinner = document.getElementById("spinner");
+    const faceCountEl = document.getElementById("faceCount");
+    const fpsEl = document.getElementById("fps");
+
+    let faceLandmarker;
+    let drawingUtils;
+    let running = false;
+    let stream = null;
+    let lastVideoTime = -1;
+    let lastFrameStamp = performance.now();
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    // 1) โหลดโมเดล Face Landmarker
+    // เทียบ Face1.py: FaceMesh(max_num_faces=4, refine_landmarks=True,
+    //                 min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    async function init() {
+      try {
+        const filesetResolver = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+        );
+        faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numFaces: 4,                      // = max_num_faces=4
+          minFaceDetectionConfidence: 0.5,  // = min_detection_confidence=0.5
+          minTrackingConfidence: 0.5        // = min_tracking_confidence=0.5
+        });
+        drawingUtils = new DrawingUtils(ctx);
+
+        placeholder.classList.add("hidden");
+        startBtn.disabled = false;
+        setStatus("พร้อมแล้ว กดปุ่มเปิดกล้องเพื่อเริ่ม");
+      } catch (err) {
+        spinner.style.display = "none";
+        placeholderText.textContent = "โหลดโมเดลไม่สำเร็จ";
+        setStatus("โหลดโมเดลไม่สำเร็จ: " + err.message, true);
+      }
+    }
+
+    // 2) เปิดกล้อง = cv2.VideoCapture(0)
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" }
+        });
+        video.srcObject = stream;
+        await video.play();
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        running = true;
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        setStatus("");
+        renderLoop();
+      } catch (err) {
+        setStatus("เปิดกล้องไม่ได้: " + err.message + " (ต้องอนุญาตกล้อง และเปิดผ่าน https)", true);
+      }
+    }
+
+    // 3) ปิดกล้อง = cap.release()
+    function stopCamera() {
+      running = false;
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      faceCountEl.textContent = "0";
+      fpsEl.textContent = "0";
+      setStatus("ปิดกล้องแล้ว");
+    }
+
+    // 4) วน loop ตรวจจับ + วาด = while True ใน Face1.py
+    function renderLoop() {
+      if (!running) return;
+
+      const now = performance.now();
+      if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        const results = faceLandmarker.detectForVideo(video, now);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (results.faceLandmarks) {
+          faceCountEl.textContent = results.faceLandmarks.length;
+
+          // เทียบ Face1.py: วาดแค่ FACEMESH_TESSELATION เส้นขาว thickness=1
+          // ไม่แสดงจุด (landmark_drawing_spec=None)
+          for (const landmarks of results.faceLandmarks) {
+            drawingUtils.drawConnectors(
+              landmarks,
+              FaceLandmarker.FACE_LANDMARKS_TESSELATION,
+              { color: "#ffffff", lineWidth: 1 }
+            );
+          }
+        }
+
+        const dt = now - lastFrameStamp;
+        lastFrameStamp = now;
+        fpsEl.textContent = Math.round(1000 / dt);
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    startBtn.addEventListener("click", startCamera);
+    stopBtn.addEventListener("click", stopCamera);
+
+    init();
+  </script>
 </body>
-
 </html>
