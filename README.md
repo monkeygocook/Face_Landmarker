@@ -10,7 +10,7 @@ Project Face Landmarker
 ### Global
 
 - [ ] สร้าง index.html
-- [ ] ทำฟังค์ชั่น Face Landmarker
+- [x] ทำฟังค์ชั่น Face Landmarker
 - [ ] เรียกใช้ ฟังค์ชั่น Face Landmarker บน index.html
 - [ ] อัพโหลดรูปได้
 - [ ] ตั้งค่าจำนวนหน้า
