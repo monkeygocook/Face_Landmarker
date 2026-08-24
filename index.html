@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Face Landmarker</title>
   <style>
+    /* สีธีม */
+    
     :root {
       --bg: #0f1115;
       --panel: #171a21;
@@ -15,6 +17,7 @@
       --danger: #ff6b6b;
       --ok: #6bffb0;
     }
+    /* Reset CSS */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: "Segoe UI", "Sarabun", system-ui, sans-serif;
@@ -73,7 +76,8 @@
       font: inherit;
       text-align: center;
     }
-
+    /* เวทีแสดงผล = cv2.imshow */
+    /* mirror = cv2.flip */
     .stage {
       position: relative;
       width: 100%;
@@ -110,6 +114,7 @@
       z-index: 3;
       display: none;
     }
+    /* แสดงข้อความจำนวนหน้า = cv2.putText */
     .badge.show { display: block; }
     .badge.ok { color: var(--ok); }
     .badge.none { color: var(--danger); }
@@ -128,6 +133,8 @@
       padding: 20px;
       z-index: 2;
     }
+    /*col
+    /* ซ่อน placeholder เมื่อโหลดโมเดลเสร็จ */
     .placeholder.hidden { display: none; }
     .spinner {
       width: 26px; height: 26px;
@@ -138,6 +145,8 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ปุ่มควบคุม = cv2.waitKey */
+    /* flex-wrap = cv2.resizeWindow */
     .controls {
       display: flex;
       gap: 10px;
@@ -209,6 +218,7 @@
   </div>
 
   <!-- ปุ่มโหมดรูปภาพ -->
+   /* ปุ่มอัปโหลดรูปภาพ = cv2.imread */
   <div class="controls hidden-el" id="imageControls">
     <button class="btn primary" id="uploadBtn" disabled>เลือกรูปภาพ</button>
     <input type="file" id="fileInput" accept="image/*" class="hidden-el" />
@@ -367,7 +377,7 @@
         setStatus("เปิดกล้องไม่ได้: " + err.message + " (ต้องอนุญาตกล้อง และเปิดผ่าน https)", true);
       }
     }
-
+    /* ปิดกล้อง = cv2.VideoCapture.release() */
     function stopCamera() {
       running = false;
       if (stream) stream.getTracks().forEach((t) => t.stop());
@@ -426,6 +436,7 @@
     }
 
     // ===== events =====
+    /* สลับโหมด = cv2.waitKey */
     tabWebcam.addEventListener("click", () => switchMode("webcam"));
     tabImage.addEventListener("click", () => switchMode("image"));
     startBtn.addEventListener("click", startCamera);
