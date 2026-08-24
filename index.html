@@ -164,6 +164,7 @@
       cursor: pointer;
       transition: 0.15s;
     }
+    /* hover = cv2.setMouseCallback */                          
     button.btn:hover:not(:disabled) { border-color: var(--accent); }
     button.btn.primary { background: var(--accent); color: #05201b; border-color: var(--accent); }
     button.btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -179,6 +180,7 @@
     .status.error { color: var(--danger); }
 
     .hidden-el { display: none !important; }
+    /* ปรับขนาดเวทีตามหน้าจอ = cv2.resizeWindow */
   </style>
 </head>
 <body>
@@ -186,7 +188,7 @@
     <h1>Face <span>Landmarker</span></h1>
     <p>ตรวจจับตาข่ายใบหน้าจากกล้องหรือรูปภาพ ในเบราว์เซอร์</p>
   </header>
-
+  /* แสดงผลลัพธ์ = cv2.imshow */
   <!-- เลือกโหมด = choice 1/2 -->
   <div class="tabs">
     <button class="tab active" id="tabWebcam" data-mode="webcam">กล้อง (Webcam)</button>
